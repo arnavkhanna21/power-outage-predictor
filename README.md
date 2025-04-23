@@ -134,8 +134,8 @@ These categorical features were encoded using `OneHotEncoding` with `drop='first
 
 We trained our model using an 80/20 train-test split. The baseline results were:
 
-- **Mean Absolute Error:** 710.90 minutes  
-- **Mean Squared Error:** 839,673.06 sq. minutes
+- **Mean Absolute Error:** 720.22 minutes  
+- **Mean Squared Error:** 985,250.22 sq. minutes
 
 Although the baseline model's absolute error is high with an average nearly 12 hours, this is expected due to the high variance and skew in outage durations, given our histogram from earlier. Some outages last only minutes, while others extend over multiple days. 
 
@@ -177,18 +177,18 @@ We used `GridSearchCV` to find the best alpha for lasso regression.
 - Hyperparameter tuning: `GridSearchCV` over 10 values of alpha (log-spaced)
 - Best alpha: 2.15
 - **Performance**:
-  - MAE: 695.29 mins
-  - MSE: 823,349.24 sq. mins
+  - MAE: 708.42 mins
+  - MSE: 973,790.75 sq. mins
 
 **Top Weighted Features for Lasso**
 
 | Feature                             | Coefficient |
 |-------------------------------------|-------------|
-| CAUSE.CATEGORY_severe weather       | 1043.28     |
-| U.S._STATE_Michigan                 | 1010.42     |
-| CAUSE.CATEGORY_fuel supply emergency | 868.27     |
-| U.S._STATE_Virginia                 | -655.64     |
-| U.S._STATE_Minnesota                | 649.81      |
+| U.S._STATE_Michigan                 | 1107.60     |
+| CAUSE.CATEGORY_severe weather       | 1074.04     |
+| CAUSE.CATEGORY_fuel supply emergency| 814.37      |
+| U.S._STATE_Minnesota                | 725.66     |
+| U.S._STATE_Pennsylvania             | 650.61      |
 
 Lasso helped us identify the most important predictors by assigning zero weight to less relevant features, however it struggled with non-linear relationships with features, and we felt that was more important for prediction as multiple factors combined for outage duration, rather than one feature having a strict importance over the other.
 
@@ -198,32 +198,31 @@ Lasso helped us identify the most important predictors by assigning zero weight 
 
 - Hyperparameter tuning: `GridSearchCV` with
   - `max_depth`: `[10, 20, None]`
-  - `min_samples_split`: `[2, 10]`
   - `n_estimators`: `[100, 200]`
 - Best parameters:
   - `max_depth=10`, `min_samples_split=2`, `n_estimators=200`
 - **Performance**:
-  - MAE: 661.15 mins
-  - MSE: 864,003.29 sq. mins
+  - MAE: 652.68 mins
+  - MSE: 922,291.54 sq. mins
 
 **5 Most Important Features for Random Forest**:
 
 | Feature                          | Importance |
 |----------------------------------|------------|
-| CAUSE.CATEGORY_severe weather    | 0.291      |
-| CUSTOMERS.AFFECTED_MED_IMPUTED   | 0.165      |
-| UTIL.CONTRI                      | 0.101      |
-| TOTAL.PRICE_IMPUTED              | 0.098      |
+| CAUSE.CATEGORY_severe weather    | 0.301      |
+| CUSTOMERS.AFFECTED_MED_IMPUTED   | 0.154      |
+| TOTAL.PRICE_IMPUTED              | 0.099      |
+| UTIL.CONTRI                      | 0.096      |
 | PC.REALGSP.STATE                 | 0.068      |
 
 ### Comparison with Baseline Model
 
 | Model                  | MAE (mins)   | MSE (sq. mins) |
 |-----------------------|---------------|----------------|
-| Baseline (Linear)     | 710.90        | 839,673.06     |
-| Lasso Regression      | 695.29        | **823,349.24** |
-| Random Forest         | **661.15**    | 864,003.29     |
+| Baseline (Linear)     | 720.22        | 985,250.22     |
+| Lasso Regression      | 708.42        |  973,790.75    |
+| Random Forest         | **652.68**    | **922,291.54** |
 
-While the Lasso Regression model had the lowest MSE, the Random Forest model did better than both Lasso and the Baseline model on MAE, which we prioritized since it more intuitively measures the average prediction error in minutes. MAE is also less sensitive to outliers, making it a better fit for a routage duration prediction in the real world where extreme values exist.
+The Random Forest model did better than both Lasso and the Baseline model on MAE and MSE, which we prioritized as evaluation metrics since they one more intuitively measured the average prediction error in minutes and the other was robust to outliers. 
 
-The Random Forest model also captures nonlinear relationships and interactions between features, which was not possible with the Baseline linear model or Lasso. This, combined with its strong MAE performance and better interpretability via feature importance, made Random Forest the best candidate for our final model.
+The Random Forest model also captures nonlinear relationships and interactions between features, which was not possible with the Baseline linear model or Lasso. With our multitude of inpt features, this was the ideal choice for the final model. This, combined with its strong MAE/MSE performance and better interpretability with feature importance scores, made Random Forest the best candidate for our final model.
