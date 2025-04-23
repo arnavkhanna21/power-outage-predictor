@@ -101,7 +101,7 @@ All features used in the model are available at the time of prediction:
 
 ### Evaluation Metrics:
 We use two metrics to evaluate performance:
-- **Mean Absolute Error/MAE:** Reports average absolute prediction error in minutes. It is easy to interpret but less sensitive to outliers.
+- **Mean Absolute Error/MAE:** Reports average absolute prediction error in minutes. It is easy to interpret but less sensitive to outliers. We preferred MAE to MSE as our data has a lot of outliers and there is a skew in the distribution, so it is robust to these outliers.
 - **Mean Squared Error/MSE:** Penalizes large errors heavily and is useful for model comparisons.
 
 The features that we chose to include are known only at the start of the outage, which is crucial for real-world prediction.
@@ -225,4 +225,4 @@ Lasso helped us identify the most important predictors by assigning zero weight 
 
 The Random Forest model did better than both Lasso and the Baseline model on MAE and MSE, which we prioritized as evaluation metrics since they one more intuitively measured the average prediction error in minutes and the other was robust to outliers. 
 
-The Random Forest model also captures nonlinear relationships and interactions between features, which was not possible with the Baseline linear model or Lasso. With our multitude of inpt features, this was the ideal choice for the final model. This, combined with its strong MAE/MSE performance and better interpretability with feature importance scores, made Random Forest the best candidate for our final model.
+The Random Forest model also captures nonlinear relationships and interactions between features, which was not possible with the Baseline linear model or Lasso. With our multitude of inpt features, this was the ideal choice for the final model. This,combined with its strong MAE performance and better interpretability with feature importance scores, made Random Forest the best candidate for our final model.
