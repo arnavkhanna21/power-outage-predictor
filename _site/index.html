@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,maximum-scale=2">
+    <link rel="stylesheet" type="text/css" media="screen" href="/assets/css/style.css?v=bd1db8af8f8d98a70edb0283d0a90dacf90754ec">
+
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Power Outage Predictor | power-outage-predictor</title>
+<meta name="generator" content="Jekyll v3.10.0" />
+<meta property="og:title" content="Power Outage Predictor" />
+<meta property="og:locale" content="en_US" />
+<link rel="canonical" href="http://localhost:4000/" />
+<meta property="og:url" content="http://localhost:4000/" />
+<meta property="og:site_name" content="power-outage-predictor" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Power Outage Predictor" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","headline":"Power Outage Predictor","name":"power-outage-predictor","url":"http://localhost:4000/"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+
+<!-- Setup Google Analytics -->
+
+
+
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          
+            <a id="forkme_banner" href="https://github.com/arnavkhanna21/power-outage-predictor">View on GitHub</a>
+          
+
+          <h1 id="project_title">power-outage-predictor</h1>
+          <h2 id="project_tagline"></h2>
+
+          
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1 id="power-outage-predictor">Power Outage Predictor</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Power outages continue to be some of the most disruptive infrastructure failures in the United States, given our reliance on electricity for basic services, work, and other essential components of our daily lives. They affect millions of Americans yearly. 
+The Outage dataset, with <strong>1,534</strong> rows and <strong>56</strong> columns, highlights details and metadata about outages in the Continental US from 2000 to 2016. Some of these features include outage causes, number of customers affected, economic and geographic indictors, grid and utility data, and more.</p>
+
+<p>The question we aim to answer is: 
+<strong>Can we predict the duration of a power outage using a combination of climate, economic, demographic, and grid-related features?</strong></p>
+
+<p>This is a regression problem, with our target variable being the column ‘OUTAGE.DURATION’. The relevant features we wanted to include are:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">CUSTOMERS.AFFECTED</code>: Number of customers impacted</li>
+  <li><code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY</code>: High-level cause of the outage (e.g., severe weather, equipment failure)</li>
+  <li><code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code>: Utility sector’s contribution to the state GDP</li>
+  <li><code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code>: Population percentage of the state that is urban</li>
+  <li><code class="language-plaintext highlighter-rouge">AREAPCT_URBAN</code>: Area percentage of the state that is Urban</li>
+  <li><code class="language-plaintext highlighter-rouge">TOTAL.PRICE</code>: Average electricity price in the state</li>
+  <li><code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code>: Weather climate classification (e.g. hot, cold)</li>
+  <li><code class="language-plaintext highlighter-rouge">U.S._STATE</code>: State where the outage occurred</li>
+</ul>
+
+<p>With this question, we aim to discover which features are most predictive of how long outages last — and identify which features tend to cause longer interruptions.</p>
+
+<h2 id="data-cleaning-and-exploratory-data-analysis">Data Cleaning and Exploratory Data Analysis</h2>
+
+<h3 id="cleaning-steps">Cleaning Steps</h3>
+<p>After loading the excel file to our notebook, we formatted appropriately, setting the header file to the right row, and dropping the placeholder column in the dataset. We also set the index to be a column that the dataset already had as an index, called OBS. We also kept only 13 columns that we were interested in exploring for our regression task, including economic data, urbanization metrics, and climate/geographical data. Furthermore, to reduce skew and modeling noise, we decided to eliminate outliers, or outages that lasted longer than three days (4320 minutes). This left us with 1230 rows, compared to our original 1534. Lastly, all the columns had dtype=’OBJECT’, so we converted the columns with numeric values to have numeric types.</p>
+
+<p>Below is the head of our cleaned dataset:</p>
+
+<div align="center"><iframe src="assets/head_table.html" width="100%" height="250" frameborder="0"></iframe></div>
+
+<h3 id="univariate-analysis">Univariate Analysis</h3>
+
+<div align="center">
+  <iframe src="assets/duration_hist.html" width="800" height="400" frameborder="0"></iframe>
+</div>
+
+<p>The histogram above shows the distribution <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code> under 3 days in the US. Even after removing all the entries with an outage duration longer than 3 days, the data is still heavily right-skewed, with nearly 40% of our data having an outage duration of under 200 minutes.</p>
+
+<h3 id="bivariate-analysis">Bivariate Analysis</h3>
+
+<div align="center">
+  <iframe src="assets/scatter_util.html" width="800" height="400" frameborder="0"></iframe>
+</div>
+
+<p>This scatter plot shows the relationship Utility Sector contribution to State GDP and Outage Duration. We theorized that if the contribution to the utility sector is a high percentage, then outage duration would be lower due to the larger investment in infrastructure. However, from the data, we saw that there wasn’t a strong linear relationship between the two fields, and that it would not be a good predictor for outage duration alone.</p>
+
+<h3 id="grouped-table">Grouped Table</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">CAUSE.CATEGORY</th>
+      <th style="text-align: right">Avg Duration (min)</th>
+      <th style="text-align: right">Median Duration (min)</th>
+      <th style="text-align: right">Event Count</th>
+      <th style="text-align: right">Avg Customers Affected</th>
+      <th style="text-align: right">Median Customers Affected</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">fuel supply emergency</td>
+      <td style="text-align: right">2283.5</td>
+      <td style="text-align: right">2283.5</td>
+      <td style="text-align: right">2</td>
+      <td style="text-align: right">0.5</td>
+      <td style="text-align: right">0.5</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">severe weather</td>
+      <td style="text-align: right">1700.1</td>
+      <td style="text-align: right">1500</td>
+      <td style="text-align: right">487</td>
+      <td style="text-align: right">153252</td>
+      <td style="text-align: right">100000</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">public appeal</td>
+      <td style="text-align: right">920.3</td>
+      <td style="text-align: right">394</td>
+      <td style="text-align: right">15</td>
+      <td style="text-align: right">9426.3</td>
+      <td style="text-align: right">7935</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">system operability disruption</td>
+      <td style="text-align: right">543.8</td>
+      <td style="text-align: right">191</td>
+      <td style="text-align: right">81</td>
+      <td style="text-align: right">210562</td>
+      <td style="text-align: right">69000</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">equipment failure</td>
+      <td style="text-align: right">389.7</td>
+      <td style="text-align: right">184</td>
+      <td style="text-align: right">26</td>
+      <td style="text-align: right">109223</td>
+      <td style="text-align: right">49250</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">intentional attack</td>
+      <td style="text-align: right">308.2</td>
+      <td style="text-align: right">44.5</td>
+      <td style="text-align: right">190</td>
+      <td style="text-align: right">1875.3</td>
+      <td style="text-align: right">0</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">islanding</td>
+      <td style="text-align: right">237.1</td>
+      <td style="text-align: right">115.5</td>
+      <td style="text-align: right">34</td>
+      <td style="text-align: right">6169.1</td>
+      <td style="text-align: right">2342.5</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This grouped table shows the aggregated outage and customers affected statistics by the <code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY</code> column, which has types like severe weather, equipment failure, intentional attack, and others listed in the table above. Severe weather accounts for most of the events and a high mean outage duration. Fuel Supply Emergency accounts for a the longest average duration, but only had 2 events, suggesting that those events are not frequent but extreme. Intentional attacks had the second highest frequency of occurrences, but a low median and mean duration, potentially indicating that these types of outages could be contained and fixed faster.</p>
+
+<h3 id="imputation">Imputation</h3>
+
+<p>For our task, we had to impute 12 values for the <code class="language-plaintext highlighter-rouge">TOTAL.PRICE</code> column, and 395 values for the <code class="language-plaintext highlighter-rouge">CUSTOMERS.AFFECTED</code> column.</p>
+
+<p>For customers affected, we saw that the distribution was heavily right-skewed, and knew that the median would be more robust against outliers, better reflecting the typical outage event. The figure below shows the distribution of the column before and after the imputation, with the taller spike caused by the 395 values imputed with the median.</p>
+
+<div align="center"><iframe src="assets/customers_imputation_side_by_side.html" width="800" height="400" frameborder="0"></iframe></div>
+
+<p>For total price, we knew that the field was the average monthly electricity price in the corresponding U.S. state of the event. Since there were also only 12 missing values, we decided to impute these by going with the median of the other TOTAL.PRICE values of entries in the same state to preserve regional pricing differences. The figure below shows the difference in the distribution before and after the imputation, with there being little to no difference between the two.</p>
+
+<div align="center"><iframe src="assets/price_imputation_side_by_side.html" width="800" height="400" frameborder="0"></iframe></div>
+
+<h2 id="framing-a-prediction-problem">Framing a Prediction Problem</h2>
+<p>Our goal is to predict the duration of a power outage in minutes, using only information known at the start of the outage This is a regression problem, as the response variable <code class="language-plaintext highlighter-rouge">OUTAGE.DURATION</code> is numerical and continuous.</p>
+
+<p>We chose outage duration as the prediction target because it is a critical piece of information for both utility companies and the public. Estimating how long an outage might last helps with operational decisions, communication with customers, and improving future response strategies.</p>
+
+<h3 id="included-features">Included Features:</h3>
+<p>All features used in the model are available at the time of prediction:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">CUSTOMERS.AFFECTED</code>: Number of customers impacted</li>
+  <li><code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY</code>: High-level cause of the outage (e.g., severe weather, equipment failure)</li>
+  <li><code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code>: Utility sector’s contribution to the state GDP</li>
+  <li><code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code>: Population percentage of the state that is urban</li>
+  <li><code class="language-plaintext highlighter-rouge">AREAPCT_URBAN</code>: Area percentage of the state that is Urban</li>
+  <li><code class="language-plaintext highlighter-rouge">TOTAL.PRICE</code>: Average electricity price in the state</li>
+  <li><code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code>: Weather climate classification (e.g. hot, cold)</li>
+  <li><code class="language-plaintext highlighter-rouge">U.S._STATE</code>: State where the outage occurred</li>
+</ul>
+
+<h3 id="evaluation-metrics">Evaluation Metrics:</h3>
+<p>We use two metrics to evaluate performance:</p>
+<ul>
+  <li><strong>Mean Absolute Error/MAE:</strong> Reports average absolute prediction error in minutes. It is easy to interpret but less sensitive to outliers.</li>
+  <li><strong>Mean Squared Error/MSE:</strong> Penalizes large errors heavily and is useful for model comparisons.</li>
+</ul>
+
+<p>The features that we chose to include are known only at the start of the outage, which is crucial for real-world prediction.</p>
+
+<h2 id="baseline-model">Baseline Model</h2>
+
+<p>For our baseline, we trained a Linear Regression model to predict outage duration. Our dataset contained both quantitative and categorical features, so we used a full sklearn Pipeline to preprocess and train the model in one step.</p>
+
+<h3 id="features-used">Features Used</h3>
+<p>We selected 11 total features for our baseline model:</p>
+
+<ul>
+  <li><strong>Quantitative Features</strong> :
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">CUSTOMERS.AFFECTED_MED_IMPUTED</code></li>
+      <li><code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code></li>
+      <li><code class="language-plaintext highlighter-rouge">PC.REALGSP.STATE</code></li>
+      <li><code class="language-plaintext highlighter-rouge">PC.REALGSP.USA</code></li>
+      <li><code class="language-plaintext highlighter-rouge">TOTAL.PRICE_IMPUTED</code></li>
+      <li><code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code></li>
+      <li><code class="language-plaintext highlighter-rouge">AREAPCT_URBAN</code></li>
+      <li><code class="language-plaintext highlighter-rouge">POPDEN_URBAN</code></li>
+    </ul>
+  </li>
+  <li><strong>Categorical features</strong>:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">CAUSE.CATEGORY</code></li>
+      <li><code class="language-plaintext highlighter-rouge">CLIMATE.CATEGORY</code></li>
+      <li><code class="language-plaintext highlighter-rouge">U.S._STATE</code></li>
+    </ul>
+  </li>
+</ul>
+
+<p>These categorical features were encoded using <code class="language-plaintext highlighter-rouge">OneHotEncoding</code> with <code class="language-plaintext highlighter-rouge">drop='first'</code> to avoid multicollinearity.</p>
+
+<h3 id="model-evaluation">Model Evaluation</h3>
+
+<p>We trained our model using an 80/20 train-test split. The baseline results were:</p>
+
+<ul>
+  <li><strong>Mean Absolute Error:</strong> 710.90 minutes</li>
+  <li><strong>Mean Squared Error:</strong> 839,673.06 sq. minutes</li>
+</ul>
+
+<p>Although the baseline model’s absolute error is high with an average nearly 12 hours, this is expected due to the high variance and skew in outage durations, given our histogram from earlier. Some outages last only minutes, while others extend over multiple days.</p>
+
+<h2 id="final-model">Final Model</h2>
+
+<p>For our final model, we aimed to improve on our baseline linear regression by introducing new engineered features, applying more appropriate scaling methods to certain features, and experimenting with more flexible models  that could capture non-linear relationships in the data.</p>
+
+<h3 id="engineered-features-and-transformations">Engineered Features and Transformations</h3>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">URBAN_DENSITY_RATIO</code> - Calculated as the percent of population living in urban areas divided by the percent of land that is urban, or the ratio between <code class="language-plaintext highlighter-rouge">POPPCT_URBAN</code> and <code class="language-plaintext highlighter-rouge">AREAPCT_URBAN</code>. This feature captures the population in cities relative to their land use, and could affect infrastructure resilience, and in turn outage duration.
+We applied tailored preprocessing techniques to specific features:</li>
+</ul>
+
+<h4 id="standardscaler">StandardScaler</h4>
+
+<p>We used a <code class="language-plaintext highlighter-rouge">StandardScaler</code> on</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">UTIL.CONTRI</code>: Utility sector’s contribution to the state GDP</li>
+</ul>
+
+<p>This column is already on a percentage scale, but it has low variance with a lot of the utility sector’s contribution to the GDP being between 1% and 3%. Standardization  ensures that it is on the same scale as other inputs, particularly helpful for regularized models like Lasso.</p>
+
+<h4 id="quantiletransformer">QuantileTransformer</h4>
+
+<p>We applied a <code class="language-plaintext highlighter-rouge">QuantileTransformer</code> with a normal output distributionto:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">TOTAL.PRICE_IMPUTED</code></li>
+  <li><code class="language-plaintext highlighter-rouge">URBAN_DENSITY_RATIO</code></li>
+</ul>
+
+<p>We chose these variables as they had highly skewed distributions. The quantile transformer helps smooth extreme values and reshapes the data into a standard normal distribution, which makes learning more stable.</p>
+
+<h4 id="modeling-approach">Modeling approach</h4>
+
+<p>We trained and evaluated two advanced models: <strong>Lasso Regression</strong> and <strong>Random Forest Regression</strong>.</p>
+
+<h4 id="lasso-regression">Lasso Regression</h4>
+
+<p>We used <code class="language-plaintext highlighter-rouge">GridSearchCV</code> to find the best alpha for lasso regression.</p>
+
+<ul>
+  <li>Hyperparameter tuning: <code class="language-plaintext highlighter-rouge">GridSearchCV</code> over 10 values of alpha (log-spaced)</li>
+  <li>Best alpha: 2.15</li>
+  <li><strong>Performance</strong>:
+    <ul>
+      <li>MAE: 695.29 mins</li>
+      <li>MSE: 823,349.24 sq. mins</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>Top Weighted Features for Lasso</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Coefficient</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CAUSE.CATEGORY_severe weather</td>
+      <td>1043.28</td>
+    </tr>
+    <tr>
+      <td>U.S._STATE_Michigan</td>
+      <td>1010.42</td>
+    </tr>
+    <tr>
+      <td>CAUSE.CATEGORY_fuel supply emergency</td>
+      <td>868.27</td>
+    </tr>
+    <tr>
+      <td>U.S._STATE_Virginia</td>
+      <td>-655.64</td>
+    </tr>
+    <tr>
+      <td>U.S._STATE_Minnesota</td>
+      <td>649.81</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Lasso helped us identify the most important predictors by assigning zero weight to less relevant features, however it struggled with non-linear relationships with features, and we felt that was more important for prediction as multiple factors combined for outage duration, rather than one feature having a strict importance over the other.</p>
+
+<h4 id="random-forest-regressor">Random Forest Regressor</h4>
+
+<p><code class="language-plaintext highlighter-rouge">GridSearchCV</code> was used to tune max_depth, min_samples_split, and n_estimators.</p>
+
+<ul>
+  <li>Hyperparameter tuning: <code class="language-plaintext highlighter-rouge">GridSearchCV</code> with
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">max_depth</code>: <code class="language-plaintext highlighter-rouge">[10, 20, None]</code></li>
+      <li><code class="language-plaintext highlighter-rouge">min_samples_split</code>: <code class="language-plaintext highlighter-rouge">[2, 10]</code></li>
+      <li><code class="language-plaintext highlighter-rouge">n_estimators</code>: <code class="language-plaintext highlighter-rouge">[100, 200]</code></li>
+    </ul>
+  </li>
+  <li>Best parameters:
+    <ul>
+      <li><code class="language-plaintext highlighter-rouge">max_depth=10</code>, <code class="language-plaintext highlighter-rouge">min_samples_split=2</code>, <code class="language-plaintext highlighter-rouge">n_estimators=200</code></li>
+    </ul>
+  </li>
+  <li><strong>Performance</strong>:
+    <ul>
+      <li>MAE: 661.15 mins</li>
+      <li>MSE: 864,003.29 sq. mins</li>
+    </ul>
+  </li>
+</ul>
+
+<p><strong>5 Most Important Features for Random Forest</strong>:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Importance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CAUSE.CATEGORY_severe weather</td>
+      <td>0.291</td>
+    </tr>
+    <tr>
+      <td>CUSTOMERS.AFFECTED_MED_IMPUTED</td>
+      <td>0.165</td>
+    </tr>
+    <tr>
+      <td>UTIL.CONTRI</td>
+      <td>0.101</td>
+    </tr>
+    <tr>
+      <td>TOTAL.PRICE_IMPUTED</td>
+      <td>0.098</td>
+    </tr>
+    <tr>
+      <td>PC.REALGSP.STATE</td>
+      <td>0.068</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="comparison-with-baseline-model">Comparison with Baseline Model</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>MAE (mins)</th>
+      <th>MSE (sq. mins)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Baseline (Linear)</td>
+      <td>710.90</td>
+      <td>839,673.06</td>
+    </tr>
+    <tr>
+      <td>Lasso Regression</td>
+      <td>695.29</td>
+      <td><strong>823,349.24</strong></td>
+    </tr>
+    <tr>
+      <td>Random Forest</td>
+      <td><strong>661.15</strong></td>
+      <td>864,003.29</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>While the Lasso Regression model had the lowest MSE, the Random Forest model did better than both Lasso and the Baseline model on MAE, which we prioritized since it more intuitively measures the average prediction error in minutes. MAE is also less sensitive to outliers, making it a better fit for a routage duration prediction in the real world where extreme values exist.</p>
+
+<p>The Random Forest model also captures nonlinear relationships and interactions between features, which was not possible with the Baseline linear model or Lasso. This, combined with its strong MAE performance and better interpretability via feature importance, made Random Forest the best candidate for our final model.</p>
+
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        
+        <p class="copyright">power-outage-predictor maintained by <a href="https://github.com/arnavkhanna21">arnavkhanna21</a></p>
+        
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+  </body>
+</html>
